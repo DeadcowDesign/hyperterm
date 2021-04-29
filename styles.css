@@ -1,0 +1,237 @@
+:root {
+    --amber: 255, 176, 0;
+    --lt-amber: 255, 204, 0;
+    --green-1: 51, 255, 0;
+    --apple-ii: 51, 255, 51;
+    --green-2: 0, 255, 51;
+    --apple-iic: 102, 255, 102;
+    --green-3: 0, 255, 102;
+    --background: #282828;
+    --phosphor: rgb(var(--green-2));
+    --glow: rgba(var(--green-2), 0.5);
+
+    --font-size: 24px;
+    --quarter-size: calc(var(--font-size)/4);
+    --half-size: calc(var(--font-size)/2);
+    --double-size: calc(var(--font-size)*2);
+
+    --border: 2px solid;
+    --border-invert: 2px solid;
+}
+
+
+* {
+    box-sizing: border-box;
+    font-size: var(--font-size);
+    font-weight: normal;
+    color: var(--phosphor);
+    line-height: 1.25;
+    margin: 0;
+    padding: 0;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    cursor: not-allowed;
+    
+}
+
+p.no-space:first-of-type {
+    padding-top: var(--half-size);
+}
+
+p.no-space {
+    line-height: 0.75;
+}
+
+h1 {
+    line-height: 2;
+}
+
+body.glow .terminal > * {
+    filter: drop-shadow(0px 0px 5px var(--glow));
+}
+
+body {
+    width: 100vw;
+    height: 100vh;
+    padding: 0 var(--half-size);
+    margin: 0;
+    background-color: var(--background);
+    color: var(--phosphor);
+    border-color: var(--phosphor);
+    font-family: 'VT323', monospace;
+    caret-color: transparent;
+}
+
+body > *.invert {
+    background-color: var(--phosphor);
+    color: var(--background);
+}
+
+pre {
+    font-family: 'VT323', monospace;
+}
+
+body.amber {
+    --phosphor: rgb(var(--amber));
+    --glow: rgba(var(--amber), 0.5);
+    
+}
+
+body.lt-amber {
+    --phosphor: rgb(var(--lt-amber));
+    --glow: rgba(var(--lt-amber), 0.5);
+}
+
+body.green-1 {
+    --phosphor: rgb(var(--green-1));
+    --glow: rgba(var(--green-1), 0.5);
+}
+
+body.green-2 {
+    --phosphor: rgb(var(--green-2));
+    --glow: rgba(var(--green-2), 0.5);
+}
+
+body.green-3 {
+    --phosphor: rgb(var(--green-3));
+    --glow: rgba(var(--green-3), 0.5);
+}
+
+body.apple-ii {
+    --phosphor: rgb(var(--apple-ii));
+    --glow: rgba(var(--apple-ii), 0.5);
+}
+
+body.apple-iic {
+    --phosphor: rgb(var(--apple-iic));
+    --glow: rgba(var(--apple-iic), 0.5);
+}
+
+h2 {
+    margin-top: var(--font-size);
+}
+
+ul, li {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+li {
+    padding-left: var(--double-size);
+}
+
+li:before {
+    content: "* ";
+}
+
+hr {
+    border: none;
+    padding: 0;
+    margin: 0;
+    border-top: var(--border);
+}
+table {
+    margin-top: 24px;
+    border-collapse: collapse;
+    width: 100%;
+}
+th, td {
+    border: var(--border);
+    padding: var(--quarter-size) var(--half-size) ;
+}
+
+th {
+    border: var(--border-invert);
+    color: var(--background);
+    background: var(--phosphor);
+}
+
+tfoot td:empty {
+    border: none;
+}
+
+.terminal:before {
+    content: " ";
+    display: block;
+    visibility: hidden;
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+    z-index: 2;
+    background-size: 100% 2px, 3px 100%;
+    pointer-events: none;
+}
+
+.terminal.screen:before {
+    visibility: visible;
+}
+
+.terminal {
+    width: 100%;
+    height: 100%;
+    max-height: 100vh;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+}
+
+header {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    border-bottom: var(--border);
+    column-gap: 12px;
+    align-items: center;
+}
+
+.output-wrapper {
+    position: relative;
+    overflow: hidden;
+}
+
+.output {
+    position: absolute;
+    min-height: 100%;
+    min-width: 100%;
+    bottom: 0;
+}
+
+.input {
+    display: grid;
+    border-top: var(--border);
+    min-height: var(--double-size);
+    align-items: center;
+    grid-template-columns: auto auto auto 1fr;
+}
+ input p {
+     display: block;
+ }
+
+.input-bar {
+    position: relative;
+    min-height: calc(var(--font-size) + 2px);
+    display: inline-block;
+    border: none;
+    outline: none;
+    text-transform: uppercase;
+    margin-left: 12px;
+}
+
+.caret {
+    display: block;
+    width: var(--half-size);
+    height: var(--font-size);
+    background-color: var(--phosphor);
+    animation: 1s blink step-end infinite;
+  }
+  
+  @keyframes blink {
+    from, to {
+        background-color: transparent;
+    }
+    50% {
+        background-color: var(--phosphor);
+    }
+  }
