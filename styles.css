@@ -1,4 +1,5 @@
 :root {
+    --white: 255, 255, 255;
     --amber: 255, 176, 0;
     --lt-amber: 255, 204, 0;
     --green-1: 51, 255, 0;
@@ -6,11 +7,14 @@
     --green-2: 0, 255, 51;
     --apple-iic: 102, 255, 102;
     --green-3: 0, 255, 102;
+    --blue: 0,70,255;
+    --red: 255,95,0;
     --background: #282828;
     --phosphor: rgb(var(--green-2));
     --glow: rgba(var(--green-2), 0.5);
 
     --font-size: 24px;
+    --smaller: calc(var(--font-size)/1.25);
     --quarter-size: calc(var(--font-size)/4);
     --half-size: calc(var(--font-size)/2);
     --double-size: calc(var(--font-size)*2);
@@ -32,6 +36,10 @@
     -moz-osx-font-smoothing: grayscale;
     cursor: not-allowed;
     
+}
+
+*.small {
+    font-size: var(--smaller);
 }
 
 p.no-space:first-of-type {
@@ -105,6 +113,21 @@ body.apple-ii {
 body.apple-iic {
     --phosphor: rgb(var(--apple-iic));
     --glow: rgba(var(--apple-iic), 0.5);
+}
+
+body.white {
+    --phosphor: rgb(var(--white));
+    --glow: rgba(var(--white), 0.5);
+}
+
+body.blue {
+    --phosphor: rgb(var(--blue));
+    --glow: rgba(var(--blue), 0.5);
+}
+
+body.red {
+    --phosphor: rgb(var(--red));
+    --glow: rgba(var(--red), 0.5);
 }
 
 h2 {
