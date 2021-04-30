@@ -1,22 +1,78 @@
-class DDOS {
+class OS {
 
     constructor() {
-        this.output = document.getElementById('output'),
-            this.input = document.getElementById('input-bar'),
-            this.terminal = document.getElementById('terminal');
+        this.output = '',
+        this.input = '',
+        this.terminal = '',
         this.command = '',
-            this.data = '';
+        this.awaitingInput = '',
+        this.program = '',
+        this.data = '';
 
-        this.init();
+        this.boot();
     }
 
-    init() {
-        this.input.focus();
-        this.disableMouseAndKeys();
-        this.startInputListener();
-        this.goto('home');
+
+    boot() {
+        const self = this;
+        document.addEventListener("DOMContentLoaded", () => {
+            self.buildInterface();
+            self.input.focus();
+            self.disableMouseAndKeys();
+            self.startInputListener();
+            self.goto('home');
+        });
     }
 
+    buildInterface() {
+        // Build the terminal container
+        this.terminal = document.createElement('div');
+        this.terminal.classList.add('terminal', 'screen');
+        this.terminal.setAttribute('id', 'terminal');
+        document.body.appendChild(this.terminal);
+
+        // Build the header
+        let header = document.createElement('header');
+        let h1 = document.createElement('h1');
+        h1.innerHTML = '<h1><i>H</i>yper<i>T</i>er<i>M</i>ina<i>L</i> - (HTML)</h1>';
+        header.appendChild(h1);
+        let pageData = document.createElement('p');
+        pageData.innerHTML = '<p>Page: <span id="pageName"></span></p>';
+        header.appendChild(pageData);
+        let byteData = document.createElement('p');
+        byteData.innerHTML = '<p>Loaded <span id="bytes"></span> bytes</p>';
+        header.appendChild(byteData);
+        this.terminal.appendChild(header);
+
+        // Build the output container
+        let outputWrapper = document.createElement('div');
+        outputWrapper.classList.add('output-wrapper');
+        this.terminal.appendChild(outputWrapper);
+        this.output = document.createElement('div');
+        this.output.classList.add('output');
+        this.output.setAttribute('id', 'output');
+        this.output.style.bottom = '0px';
+        outputWrapper.appendChild(this.output);
+        this.terminal.appendChild(outputWrapper);
+
+        // Build the input
+        let inputWrapper = document.createElement('div');
+        inputWrapper.classList.add("input");
+        let barText = document.createElement('p');
+        barText.innerText = "Enter command: ";
+        inputWrapper.appendChild(barText);
+        this.input = document.createElement('p');
+        this.input.classList.add('input-bar');
+        this.input.setAttribute('id', "input-bar");
+        this.input.setAttribute("contenteditable", "true");
+        inputWrapper.appendChild(this.input);
+        let caret = document.createElement("div");
+        caret.classList.add("caret");
+        inputWrapper.appendChild(caret);
+        this.terminal.appendChild(inputWrapper);
+
+        return true;
+    }
     /**
      * disableMouseAndKeys - prevents the user from clicking any elements
      * and returns focus to the input bar if the user attempts to use their
@@ -95,7 +151,8 @@ class DDOS {
      * first if the terminal window should be wiped before adding the message
      */
     addMessage(markup) {
-        output.insertAdjacentHTML('beforeend', markup);
+        console.log(this.output);
+        this.output.insertAdjacentHTML('beforeend', markup);
     }
 
     /**
@@ -113,12 +170,24 @@ class DDOS {
         this.command = command;
         this.data = data.join(" ");
 
-        if (typeof this[this.command] !== 'function') {
-            this.doError(1, `Command '${this.command}' not recognised`);
+        if (this.awaitingInput === '') {
+            if (typeof this[this.command] !== 'function') {
+                this.doError(1, `Command '${this.command}' not recognised`);
+                return false;
+            }
+
+            return this[this.command](this.data);
+        }
+
+        if (typeof this[this.awaitingInput] !== 'function') {
+            this.doError(0, 'Unexpected input error');
             return false;
         }
 
-        return this[this.command](data);
+        let awaitingFunc = this.awaitingInput;
+        this.awaitingInput = '';
+
+        this[awaitingFunc](this.command, this.data);
     }
 
     /**
@@ -174,44 +243,13 @@ class DDOS {
         document.getElementById('pageName').innerText = '/' + url;
 
     }
-    /***************************************************************************
-    * COMMANDS
-    ***************************************************************************/
 
-    help(detail) {
-        if (detail == "") {
-            this.goto('help/help');
-        } else {
-            this.goto(`help/${detail}`);
-        }
-    }
-
-    list() {
-        this.goto('list');
-    }
-
-    home() {
-        this.goto('home');
-    }
-
-    hello() {
-        this.addMessage('Hello, yourself.');
-    }
-
-    goto(url) {
-        const self = this;
-        this.addMessage("<p>Loading /" + url + " Please wait...</p>");
-        this.loadPage(`pages/${url}.html`).then((markup) => {
-            self.clear();
-            self.addMessage(markup);
-            self.updateBytes(markup.length);
-            self.updatePage(url);
-        })
-            .catch((error) => {
-                self.doError(error.status, error.message);
-            });
-    }
-
+    /**
+     * doError - output an OS error to the screen.
+     * 
+     * @param {int} code The error code
+     * @param {String} message The error message
+     */
     doError(code = 0, message = '') {
         this.addMessage(`<p>The OS could not process your request because of an error.</p>`);
         let errorMessage = '<p>';
@@ -232,6 +270,20 @@ class DDOS {
         this.addMessage(errorMessage);
     }
 
+    goto(url) {
+        const self = this;
+        this.addMessage("<p>Loading /" + url + " Please wait...</p>");
+        this.loadPage(`pages/${url}.html`).then((markup) => {
+            self.clear();
+            self.addMessage(markup);
+            self.updateBytes(markup.length);
+            self.updatePage(url);
+        })
+            .catch((error) => {
+                self.doError(error.status, error.message);
+            });
+    }
+
     reset() {
         location.reload();
     }
@@ -239,46 +291,5 @@ class DDOS {
     clear() {
         this.output.innerHTML = "";
         this.output.style.bottom = '0px';
-    }
-
-    glow() {
-        document.body.classList.toggle('glow');
-
-        let message = '<p>Glow disabled</p>';
-
-        if (document.body.classList.contains('glow')) {
-            message = '<p>Glow enabled</p>';
-        }
-
-        this.addMessage(message);
-    }
-
-    scanlines() {
-        this.terminal.classList.toggle('screen');
-
-        let message = '<p>Scanlines disabled</p>';
-
-        if (this.terminal.classList.contains('screen')) {
-            message = '<p>Scanlines enabled</p>';
-        }
-
-        this.addMessage(message);
-    }
-
-    colour(requiredColour) {
-        let colours = ['amber', 'lt-amber', 'green-1', 'green-2', 'green-3', 'apple-ii', 'apple-iic'];
-
-        for (const colour of colours) {
-
-            document.body.classList.remove(colour);
-
-            if (colour == requiredColour) {
-                document.body.classList.add(requiredColour);
-
-                return true;
-            }
-        }
-
-        this.doError(0, `Colour not recogised. type 'HELP COLOUR' for a list of available colours`);
     }
 }
