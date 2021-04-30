@@ -108,6 +108,11 @@ class OsCommands extends OS {
         return true;
 
     }
+
+    echo(string) {
+        string = '<p>' + string + '</p>';
+        this.addMessage(string);
+    }
 }
 
 new OsCommands();
