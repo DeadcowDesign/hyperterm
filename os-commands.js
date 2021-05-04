@@ -9,7 +9,6 @@ class OsCommands extends OS {
     ***************************************************************************/
 
     test(command = '', data = '') {
-        console.log(command);
         if (command == '') {
             this.clear();
             this.addMessage(`<p>Would you like to save? Y/N</p>`);
@@ -25,10 +24,11 @@ class OsCommands extends OS {
     }
 
     help(detail) {
+        const helpdir = 'pages/help/'
         if (detail == "") {
-            this.goto('help/help');
+            this.goto(helpdir + 'help.html');
         } else {
-            this.goto(`help/${detail}`);
+            this.goto(`${helpdir}${detail}.html`);
         }
     }
 
@@ -37,34 +37,11 @@ class OsCommands extends OS {
     }
 
     home() {
-        this.goto('home');
+        this.goto('pages/home.html');
     }
 
     hello() {
         this.addMessage('Hello, yourself.');
-    }
-
-    goto(url) {
-        const self = this;
-        this.addMessage("<p>Loading /" + url + " Please wait...</p>");
-        this.loadPage(`pages/${url}.html`).then((markup) => {
-            self.clear();
-            self.addMessage(markup);
-            self.updateBytes(markup.length);
-            self.updatePage(url);
-        })
-            .catch((error) => {
-                self.doError(error.status, error.message);
-            });
-    }
-
-    reset() {
-        location.reload();
-    }
-
-    clear() {
-        this.output.innerHTML = "";
-        this.output.style.bottom = '0px';
     }
 
     glow() {
@@ -110,7 +87,7 @@ class OsCommands extends OS {
     }
 
     echo(string) {
-        string = '<p>' + string + '</p>';
+        string = '<p>' + string.toUpperCase() + '</p>';
         this.addMessage(string);
     }
 }

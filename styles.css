@@ -9,7 +9,8 @@
     --green-3: 0, 255, 102;
     --blue: 0,70,255;
     --red: 255,95,0;
-    --background: #282828;
+    --glass: 40,40,40;
+    --background: rgb(var(--glass));
     --phosphor: rgb(var(--green-2));
     --glow: rgba(var(--green-2), 0.5);
 
@@ -183,7 +184,14 @@ tfoot td:empty {
     left: 0;
     bottom: 0;
     right: 0;
-    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+    background: repeating-linear-gradient(
+      to bottom,
+      rgba(var(--glass), 0.5),
+      rgba(var(--glass), 0.5) 1px,
+      rgba(var(--glass), 0) 1px,
+      rgba(var(--glass), 0) 2px
+    );    
+    
     z-index: 2;
     background-size: 100% 2px, 3px 100%;
     pointer-events: none;

@@ -1,26 +1,36 @@
 class OS {
 
     constructor() {
-        this.output = '',
-        this.input = '',
-        this.terminal = '',
-        this.command = '',
-        this.awaitingInput = '',
-        this.program = '',
-        this.data = '';
+        this.output         = '',
+        this.input          = '',
+        this.caret          = '',
+        this.terminal       = '',
+        this.command        = '',
+        this.awaitingInput  = '',
+        this.program        = '',
+        this.data           = '';
 
         this.boot();
     }
 
+    /**
+     * addMessage - add a message to the terminal. Valid HTML should be passed
+     * to this function. Note that this will not clear the terminal and any
+     * message will be added to the bottom of the stack. Call the clear function
+     * first if the terminal window should be wiped before adding the message
+     */
+    addMessage(markup) {
+        this.output.insertAdjacentHTML('beforeend', markup);
+    }
 
     boot() {
         const self = this;
         document.addEventListener("DOMContentLoaded", () => {
             self.buildInterface();
             self.input.focus();
-            self.disableMouseAndKeys();
+            self.detectFocus();
             self.startInputListener();
-            self.goto('home');
+            self.goto('pages/home.html');
         });
     }
 
@@ -65,14 +75,25 @@ class OS {
         this.input.classList.add('input-bar');
         this.input.setAttribute('id', "input-bar");
         this.input.setAttribute("contenteditable", "true");
+        this.input.setAttribute('tabindex', '0');
         inputWrapper.appendChild(this.input);
-        let caret = document.createElement("div");
-        caret.classList.add("caret");
-        inputWrapper.appendChild(caret);
+        this.caret = document.createElement("div");
+        this.caret.classList.add("caret");
+        this.caret.setAttribute('id', 'caret');
+        inputWrapper.appendChild(this.caret);
         this.terminal.appendChild(inputWrapper);
 
         return true;
     }
+
+    /**
+     * clear - clear the terminal window
+     */
+    clear() {
+        this.output.innerHTML = "";
+        this.output.style.bottom = '0px';
+    }
+
     /**
      * disableMouseAndKeys - prevents the user from clicking any elements
      * and returns focus to the input bar if the user attempts to use their
@@ -80,79 +101,159 @@ class OS {
      * 
      * Also disables default behaviour for the enter key to enable single line
      * input for the input bar.
+     * 
+     * Attempts to detect focus for the input bar. Unfortunately, you can't actually properly
+     * detect whether an element is focussed or not when the user tabs out of the page.
+     * Which is, frankly, utterly insane.
      */
-    disableMouseAndKeys() {
-        window.addEventListener('click', () => {
-            this.addMessage("<p>Mouse navigation is disabled. Returning control to command bar.</p>");
-            this.input.focus();
+    detectFocus() {
+        document.addEventListener('keyup', (e) => {
+            if (e.target.nodeName !== 'P') {
+                self.addMessage(e.target.nodeName);
+            }
         })
-    }
 
-    /**
-     * startInputListener - listen for keyboard events from this method. Any
-     * special keys should be added in here. Note that we disable Enter, Esc, 
-     * and the left and right arrows to prevent issues with the OS.
-     */
-    startInputListener() {
         const self = this;
+        this.input.addEventListener('focusout', () => {
+            this.caret.style.display = 'none';
+            focuslost = true;
+            self.input.focus();
+        })
 
-        this.input.addEventListener("keydown", (event) => {
-
-            switch (event.key) {
-                case 'Enter':
-                    event.preventDefault();
-                    this.processCommand(this.input.innerText);
-                    this.input.innerText = '';
-                    break;
-
-                case 'Escape':
-                    event.preventDefault();
-                    this.input.innerText = '';
-                    break;
-                
-                case 'ArrowLeft':
-                case 'ArrowRight':
-                    event.preventDefault();
-                    break;
-                case 'ArrowUp':
-                    event.preventDefault();
-                    this.scroll(24, true);
-                    break;
-                case 'ArrowDown':
-                    event.preventDefault();
-                    this.scroll(24);
-                    break;
+        this.input.addEventListener('focus', (e) => {
+            if (e.target.nodeName == 'P') {
+                this.caret.style.display = 'block';
+                focuslost = false;
             }
         })
     }
 
     /**
-     * scroll - allow the user to scroll the output window with their cursor
-     * keys. Probably wouldn't have been a feature of original green-screen
-     * terminals, but we have to make some allowances for modernity and
-     * practicality.
+     * doError - output an OS error to the screen.
      * 
-     * @param {int} amount The amount in pixels each keypress should scroll by
-     * @param {string} up Set true to scroll up, else down.
+     * @param {int} code The error code
+     * @param {String} message The error message
      */
-    scroll(amount, up = false) {
-        let bottom = parseInt(this.output.style.bottom);
-
-        if (up) {
-                this.output.style.bottom = (bottom - amount) + 'px';
-        } else {
-            this.output.style.bottom = (bottom + amount) + 'px';
+    doError(code = 0, message = '') {
+        this.addMessage(`<p>The OS could not process your request because of an error.</p>`);
+        let errorMessage = '<p>';
+        if (code) {
+            errorMessage += `Code: ${code} `;
         }
+
+        errorMessage += `Message: `;
+
+        if (message) {
+            errorMessage += message;
+        } else {
+            errorMessage += "Unidentified Error";
+        }
+
+        errorMessage += '</p>';
+
+        this.addMessage(errorMessage);
     }
+
     /**
-     * addMessage - add a message to the terminal. Valid HTML should be passed
-     * to this function. Note that this will not clear the terminal and any
-     * message will be added to the bottom of the stack. Call the clear function
-     * first if the terminal window should be wiped before adding the message
+     * goto - goto a page on the website or a link
+     * @param {utl} url the requested URL
      */
-    addMessage(markup) {
-        console.log(this.output);
-        this.output.insertAdjacentHTML('beforeend', markup);
+    goto(url) {
+
+        if (url.match(/^[0-9]{1,}$/)) {
+            let targetLink = document.querySelector(`[data-index="${url}"]`);
+
+            if (!targetLink) {
+
+                this.doError(0, "Unrecognised link ID");
+                return false;
+            }
+
+            url = targetLink.getAttribute("href");
+        }
+
+        // Open external site
+        if (url.match(/^http(s)?:/)) {
+
+            this.addMessage('<p>Opening link in new window in 5 seconds<p>');
+            this.timer(5, () => window.open(url));
+
+
+        } else {
+
+            // Open internal page
+            const self = this;
+            this.addMessage("<p>Loading /" + url + " Please wait...</p>");
+            this.loadPage(`${url}`).then((markup) => {
+                self.clear();
+                self.addMessage(markup);
+                self.updateBytes(markup.length);
+                self.updatePage(url);
+                self.parseLinks();
+            })
+                .catch((error) => {
+                    self.doError(error.status, error.message);
+
+                    return false;
+                });
+        }
+
+        return true;
+    }
+
+    /**
+     * loadPage ajax out to a specified resource and return it.
+     * 
+     * @return {promise} A JavaScript promis object
+     */
+    loadPage(page = '') {
+
+        this.addMessage('<p>' + page + '</p>');
+        let httpRequest = new XMLHttpRequest();
+
+        return new Promise((resolve, reject) => {
+
+            httpRequest.onreadystatechange = () => {
+
+                if (httpRequest.readyState === XMLHttpRequest.DONE) {
+
+                    if (httpRequest.status === 200) {
+
+                        resolve(httpRequest.responseText);
+
+                    } else if (httpRequest.status === 404) {
+
+                        reject({ status: httpRequest.status, message: "The requested page could not be found." });
+
+                    } else {
+
+                        reject({ status: httpRequest.status, message: "There was a problem loading the page. Please refresh the page or try again later" });
+                    }
+                }
+            }
+
+            let cachebuster = Math.round(new Date().getTime() / 1000);
+            httpRequest.open('GET', page + '?cb=' + cachebuster);
+
+            httpRequest.send();
+        });
+    }
+
+    /**
+     * parseLinks - loop through the page links and add a link
+     * identifier to them so they can be access via the command
+     * @returns boolean on success
+     */
+    parseLinks() {
+        let links = this.output.querySelectorAll('a');
+
+        for (let i = 0; i < links.length; i++) {
+            console.log(links[i]);
+            links[i].innerHTML += ` [${i + 1}]`;
+            links[i].dataset.index = i + 1;
+        }
+
+        return true;
     }
 
     /**
@@ -191,40 +292,83 @@ class OS {
     }
 
     /**
-     * loadPage ajax out to a specified resource and return it.
-     * 
-     * @return {promise} A JavaScript promis object
+     * reset - reset the terminal (reload the page)
      */
-    loadPage(page = '') {
+    reset() {
+        location.reload();
+    }
 
-        let httpRequest = new XMLHttpRequest();
+    /**
+     * scroll - allow the user to scroll the output window with their cursor
+     * keys. Probably wouldn't have been a feature of original green-screen
+     * terminals, but we have to make some allowances for modernity and
+     * practicality.
+     * 
+     * @param {int} amount The amount in pixels each keypress should scroll by
+     * @param {string} up Set true to scroll up, else down.
+     */
+    scroll(amount, up = false) {
+        let bottom = parseInt(this.output.style.bottom);
 
-        return new Promise((resolve, reject) => {
+        if (up) {
+            this.output.style.bottom = (bottom - amount) + 'px';
+        } else {
+            this.output.style.bottom = (bottom + amount) + 'px';
+        }
+    }
 
-            httpRequest.onreadystatechange = () => {
+    /**
+     * startInputListener - listen for keyboard events from this method. Any
+     * special keys should be added in here. Note that we disable Enter, Esc, 
+     * and the left and right arrows to prevent issues with the OS.
+     */
+    startInputListener() {
+        const self = this;
 
-                if (httpRequest.readyState === XMLHttpRequest.DONE) {
+        this.input.addEventListener("keydown", (event) => {
 
-                    if (httpRequest.status === 200) {
+            switch (event.key) {
+                case 'Enter':
+                    event.preventDefault();
+                    this.processCommand(this.input.innerText);
+                    this.input.innerText = '';
+                    break;
 
-                        resolve(httpRequest.responseText);
+                case 'Escape':
+                    event.preventDefault();
+                    this.input.innerText = '';
+                    break;
 
-                    } else if (httpRequest.status === 404) {
-
-                        reject({ status: httpRequest.status, message: "The requested page could not be found." });
-
-                    } else {
-
-                        reject({ status: httpRequest.status, message: "There was a problem loading the page. Please refresh the page or try again later" });
-                    }
-                }
+                case 'ArrowLeft':
+                case 'ArrowRight':
+                    event.preventDefault();
+                    break;
+                case 'ArrowUp':
+                    event.preventDefault();
+                    this.scroll(24, true);
+                    break;
+                case 'ArrowDown':
+                    event.preventDefault();
+                    this.scroll(24);
+                    break;
             }
+        })
+    }
 
-            let cachebuster = Math.round(new Date().getTime() / 1000);
-            httpRequest.open('GET', page + '?cb=' + cachebuster);
+    timer(seconds = 0, callback = () => {}) {
 
-            httpRequest.send();
-        });
+        let secs = seconds - 1;
+        const self = this;
+
+        let timer = window.setInterval(() => {
+            if (secs > 0) {
+                this.addMessage(`<p>${secs} Seconds...</p>`);
+                secs--;
+            } else {
+                callback();
+                window.clearInterval(timer);
+            }
+        }, (1000));
     }
 
     /**
@@ -240,56 +384,7 @@ class OS {
      * @param {string} url Name of page
      */
     updatePage(url = '') {
-        document.getElementById('pageName').innerText = '/' + url;
+        document.getElementById('pageName').innerText = url;
 
-    }
-
-    /**
-     * doError - output an OS error to the screen.
-     * 
-     * @param {int} code The error code
-     * @param {String} message The error message
-     */
-    doError(code = 0, message = '') {
-        this.addMessage(`<p>The OS could not process your request because of an error.</p>`);
-        let errorMessage = '<p>';
-        if (code) {
-            errorMessage += `Code: ${code} `; 
-        }
-        
-        errorMessage += `Message: `;
-
-        if (message) {
-            errorMessage += message;
-        } else {
-            errorMessage += "Unidentified Error";
-        }
-
-        errorMessage += '</p>';
-
-        this.addMessage(errorMessage);
-    }
-
-    goto(url) {
-        const self = this;
-        this.addMessage("<p>Loading /" + url + " Please wait...</p>");
-        this.loadPage(`pages/${url}.html`).then((markup) => {
-            self.clear();
-            self.addMessage(markup);
-            self.updateBytes(markup.length);
-            self.updatePage(url);
-        })
-            .catch((error) => {
-                self.doError(error.status, error.message);
-            });
-    }
-
-    reset() {
-        location.reload();
-    }
-
-    clear() {
-        this.output.innerHTML = "";
-        this.output.style.bottom = '0px';
     }
 }
