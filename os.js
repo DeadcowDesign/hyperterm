@@ -110,20 +110,19 @@ class OS {
         document.addEventListener('keyup', (e) => {
             if (e.target.nodeName !== 'P') {
                 self.addMessage(e.target.nodeName);
+                self.input.focus();
             }
         })
 
         const self = this;
         this.input.addEventListener('focusout', () => {
             this.caret.style.display = 'none';
-            focuslost = true;
             self.input.focus();
         })
 
         this.input.addEventListener('focus', (e) => {
             if (e.target.nodeName == 'P') {
                 this.caret.style.display = 'block';
-                focuslost = false;
             }
         })
     }

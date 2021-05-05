@@ -33,7 +33,7 @@ class OsCommands extends OS {
     }
 
     list() {
-        this.goto('list');
+        this.goto('pages/list.html');
     }
 
     home() {
