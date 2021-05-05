@@ -8,9 +8,10 @@ class OS {
         this.command        = '',
         this.awaitingInput  = '',
         this.program        = '',
+        this.statusMessage  = '',
+        this.commandPrompt  = '',
         this.data           = '';
 
-        this.boot();
     }
 
     /**
@@ -32,6 +33,10 @@ class OS {
             self.startInputListener();
             self.goto('pages/home.html');
         });
+    }
+
+    setCommandPrompt() {
+        
     }
 
     buildInterface() {
@@ -385,5 +390,17 @@ class OS {
     updatePage(url = '') {
         document.getElementById('pageName').innerText = url;
 
+    }
+
+    load(file) {
+        const self = this;
+        let program = document.createElement("script");
+        program.setAttribute("src", `programs/${file}/${file}.js`);
+        document.head.appendChild(program);
+
+        program.addEventListener('load', () => {
+            self.addMessage("<p>Program loaded</p>");
+            self.goto(`programs/${file}/${file}.html`);
+        });
     }
 }
