@@ -8,10 +8,10 @@ class OS {
         this.command        = '',
         this.awaitingInput  = '',
         this.program        = '',
-        this.statusMessage  = '',
+        this.statusBar      = '',
         this.commandPrompt  = '',
+        this.titleBar       = '',
         this.data           = '';
-
     }
 
     /**
@@ -35,10 +35,6 @@ class OS {
         });
     }
 
-    setCommandPrompt() {
-        
-    }
-
     buildInterface() {
         // Build the terminal container
         this.terminal = document.createElement('div');
@@ -48,15 +44,11 @@ class OS {
 
         // Build the header
         let header = document.createElement('header');
-        let h1 = document.createElement('h1');
-        h1.innerHTML = '<h1><i>H</i>yper<i>T</i>er<i>M</i>ina<i>L</i> - (HTML)</h1>';
-        header.appendChild(h1);
-        let pageData = document.createElement('p');
-        pageData.innerHTML = '<p>Page: <span id="pageName"></span></p>';
-        header.appendChild(pageData);
-        let byteData = document.createElement('p');
-        byteData.innerHTML = '<p>Loaded <span id="bytes"></span> bytes</p>';
-        header.appendChild(byteData);
+        this.titleBar = document.createElement('h1');
+        this.setTitleBar()
+        header.appendChild(this.titleBar);
+        this.statusBar = document.createElement('p');
+        header.appendChild(this.statusBar);
         this.terminal.appendChild(header);
 
         // Build the output container
@@ -73,9 +65,9 @@ class OS {
         // Build the input
         let inputWrapper = document.createElement('div');
         inputWrapper.classList.add("input");
-        let barText = document.createElement('p');
-        barText.innerText = "Enter command: ";
-        inputWrapper.appendChild(barText);
+        this.commandPrompt = document.createElement('p');
+        this.commandPrompt.textContent = "ENTER COMMAND: ";
+        inputWrapper.appendChild(this.commandPrompt);
         this.input = document.createElement('p');
         this.input.classList.add('input-bar');
         this.input.setAttribute('id', "input-bar");
@@ -191,8 +183,8 @@ class OS {
             this.loadPage(`${url}`).then((markup) => {
                 self.clear();
                 self.addMessage(markup);
-                self.updateBytes(markup.length);
-                self.updatePage(url);
+                let statusMessage = `<p>PAGE: ${url} - ${markup.length} BYTES LOADED</p>`;
+                self.setStatusBar(statusMessage);
                 self.parseLinks();
             })
                 .catch((error) => {
@@ -203,6 +195,29 @@ class OS {
         }
 
         return true;
+    }
+
+    /**
+     * load - not to be confused with 'loadPage' below, this loads a js file
+     * which should be formatted for hyperterminal use, and executes the 'main'
+     * function which works like initialization.
+     * 
+     * @param {string} file The program to be loaded
+     */
+    load(file) {
+        if (this.program) {document.head.removeChild(this.program)};
+
+        const self = this;
+        let cachebuster = Math.round(new Date().getTime() / 1000);
+        this.program = document.createElement("script");
+        this.program.setAttribute("src", `programs/${file}/${file}.js?cb=${cachebuster}`);
+        document.head.appendChild(this.program);
+
+        this.program.addEventListener('load', () => {
+            self.addMessage("<p>Program loaded</p>");
+            //self.goto(`programs/${file}/${file}.html`);
+            this.main();
+        });
     }
 
     /**
@@ -321,6 +336,17 @@ class OS {
         }
     }
 
+    setCommandPrompt(message = 'ENTER COMMAND: ') {
+        this.commandPrompt.textContent = message;
+    }
+
+    setTitleBar(message = '<i>H</i>yper<i>T</i>er<i>M</i>ina<i>L</i> - (HTML)') {
+        this.titleBar.innerHTML = message;
+    }
+
+    setStatusBar(message = '') {
+        this.statusBar.innerHTML = message;
+    }
     /**
      * startInputListener - listen for keyboard events from this method. Any
      * special keys should be added in here. Note that we disable Enter, Esc, 
@@ -375,32 +401,94 @@ class OS {
         }, (1000));
     }
 
+    /***********
+     * UTILITIES
+     ***********/
+
     /**
-     * updateBytes - update the number of bytes loaded in the status bar
-     * @param {int} bytes Number of bytes loaded
+     * glow - toggle the glow effect. Default is 'off'. Simply adds the glow class
+     * to the body which in turn adds a drop shadow to everything. I'm using
+     * filter: drop shadow as opposed to other methods because it works on all
+     * elements with minimal effort.
      */
-    updateBytes(bytes = 0) {
-        document.getElementById('bytes').innerText = bytes;
+    glow() {
+        document.body.classList.toggle('glow');
+
+        let message = '<p>Glow disabled</p>';
+
+        if (document.body.classList.contains('glow')) {
+            message = '<p>Glow enabled</p>';
+        }
+
+        this.addMessage(message);
     }
 
     /**
-     * updatePage - update the current page displayed in the status bar
-     * @param {string} url Name of page
+     * scanlines - toggle the scanlines effect. Default is 'on' because it looks
+     * really cool. Scanlines is just a full screen overlay with a repeating
+     * gradient. Colour is based on the actual colour of CRT screens.
      */
-    updatePage(url = '') {
-        document.getElementById('pageName').innerText = url;
+    scanlines() {
+        this.terminal.classList.toggle('screen');
+
+        let message = '<p>Scanlines disabled</p>';
+
+        if (this.terminal.classList.contains('screen')) {
+            message = '<p>Scanlines enabled</p>';
+        }
+
+        this.addMessage(message);
+    }
+
+    /**
+     * colour - changes the 'phosphor' colour of the terminal. There are a bunch
+     * of options for these in the CSS, all based on actual CRT phosphor colours
+     * (taken from here: https://superuser.com/questions/361297/what-colour-is-the-dark-green-on-old-fashioned-green-screen-computer-displays).
+     * Defaults to a familiar terminal green colour (Green 2).
+     * TODO - move colours into here. Use js to change var?
+     * 
+     * @param {requiredColour} requiredColour 
+     * @returns 
+     */
+    colour(requiredColour) {
+        let colours = ['red', 'blue', 'white', 'amber', 'lt-amber', 'green-1', 'green-2', 'green-3', 'apple-ii', 'apple-iic'];
+
+        if (!colours.includes(requiredColour)) {
+            this.doError(0, `Colour not recogised. type 'HELP COLOUR' for a list of available colours`);
+            return false;
+        }
+
+        for (const colour of colours) {
+
+            document.body.classList.remove(colour);
+        }
+
+        document.body.classList.add(requiredColour);
+        return true;
 
     }
 
-    load(file) {
-        const self = this;
-        let program = document.createElement("script");
-        program.setAttribute("src", `programs/${file}/${file}.js`);
-        document.head.appendChild(program);
+    /**************
+     * SYSTEM PAGES
+     **************/
+     help(detail) {
+        const helpdir = 'pages/help/'
+        if (detail == "") {
+            this.goto(helpdir + 'help.html');
+        } else {
+            this.goto(`${helpdir}${detail}.html`);
+        }
+    }
 
-        program.addEventListener('load', () => {
-            self.addMessage("<p>Program loaded</p>");
-            self.goto(`programs/${file}/${file}.html`);
-        });
+    directory() {
+        this.goto('pages/directory.html');
+    }
+
+    home() {
+        this.goto('pages/home.html');
     }
 }
+
+var os = new OS();
+
+os.boot();

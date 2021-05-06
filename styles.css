@@ -43,11 +43,11 @@
     font-size: var(--smaller);
 }
 
-p.no-space:first-of-type {
+*.no-space:first-of-type {
     padding-top: var(--half-size);
 }
 
-p.no-space {
+*.no-space {
     line-height: 0.75;
 }
 
