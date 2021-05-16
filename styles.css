@@ -43,11 +43,11 @@
     font-size: var(--smaller);
 }
 
-p.no-space:first-of-type {
+*.no-space:first-of-type {
     padding-top: var(--half-size);
 }
 
-p.no-space {
+*.no-space {
     line-height: 0.75;
 }
 
@@ -246,7 +246,7 @@ header {
     display: inline-block;
     border: none;
     outline: none;
-    text-transform: uppercase;
+    /*text-transform: uppercase;*/
     margin-left: 12px;
 }
 
