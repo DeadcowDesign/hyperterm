@@ -1,6 +1,7 @@
-OS.prototype.basicLines = {};
+OS.prototype.basicLines = [];
 OS.prototype.projectName = '';
 OS.prototype.basicVars = {};
+OS.prototype.pointer = 0;
 
 OS.prototype.main = function() {
     this.setCommandPrompt("READY: ");
@@ -12,23 +13,11 @@ OS.prototype.main = function() {
 
 OS.prototype.edit = function(ln, data) {
 
-    console.log(ln);
-
     if (ln === '' || typeof(ln) === 'undefined') {
-        this.addMessage("<p>You are now in Edit mode. To exit type 'EXIT'</p>");
+        this.addMessage("<p>You are now in Edit mode. To exit type 'BREAK'</p>");
         this.addMessage("<p>To re-enter Edit mode type 'EDIT'</p>");
         this.awaitingInput = 'edit';
         return false;
-    }
-
-    // if it starts with a number, it's a line and should be stored.
-    if (ln.match(/^[0-9]{1,}/)) {
-        let storedLine = (ln + ' ' + data).toUpperCase();
-        this.basicLines[ln] = data.toUpperCase();
-        this.addMessage(`<pre>${storedLine}</pre>`);
-        this.setStatusBar(`${Object.keys(this.basicLines).length} LINES`);
-        this.awaitingInput = 'edit';
-        return true;
     }
 
     switch(ln) {
@@ -46,29 +35,22 @@ OS.prototype.edit = function(ln, data) {
             break;
         case 'clear':
             this.clear();
+        case 'reset':
+            this.reset();
         default:
-            //this.doLine();
+            let storedLine = (ln + ' ' + data).toUpperCase();
+            this.basicLines.push(storedLine.toUpperCase());
+            this.addMessage(`<pre>${this.basicLines.length} ${storedLine}</pre>`);
+            this.setStatusBar(`${this.basicLines.length} LINES`);
             this.awaitingInput = 'edit';
             break;
     }
 }
 
 OS.prototype.list = function() {
-    for (const [key, value] of Object.entries(this.basicLines)) {
-        this.addMessage(`<pre>${key} ${value}</pre>`);
-      }
-}
-
-OS.prototype.sortLines = function() {
-    const tempLines = Object.keys(this.basicLines).sort().reduce(
-        (obj, key) => { 
-          obj[key] = this.basicLines[key]; 
-          return obj;
-        }, 
-        {}
-    );
-
-    this.basicLines = tempLines;
+    this.basicLines.forEach((line, index) => {
+        this.addMessage(`<pre>${index} ${line}</pre>`);
+    });
 }
 
 OS.prototype.run = function() {

@@ -246,7 +246,7 @@ header {
     display: inline-block;
     border: none;
     outline: none;
-    text-transform: uppercase;
+    /*text-transform: uppercase;*/
     margin-left: 12px;
 }
 

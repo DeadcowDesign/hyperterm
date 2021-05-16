@@ -1,6 +1,7 @@
 OS.prototype.main = function() {
     this.setCommandPrompt("READY: ");
     this.setTitleBar("EXAMPLE");
+    this.clear();
 }
 
 OS.prototype.example = function() {

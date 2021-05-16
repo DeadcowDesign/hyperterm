@@ -11,6 +11,7 @@ class OS {
         this.statusBar      = '',
         this.commandPrompt  = '',
         this.titleBar       = '',
+        this.baseHref       = '/hyperterminal',
         this.data           = '';
     }
 
@@ -55,7 +56,7 @@ class OS {
         let outputWrapper = document.createElement('div');
         outputWrapper.classList.add('output-wrapper');
         this.terminal.appendChild(outputWrapper);
-        this.output = document.createElement('div');
+        this.output = document.createElement('section');
         this.output.classList.add('output');
         this.output.setAttribute('id', 'output');
         this.output.style.bottom = '0px';
@@ -178,6 +179,7 @@ class OS {
         } else {
 
             // Open internal page
+            console.log(url);
             const self = this;
             this.addMessage("<p>Loading /" + url + " Please wait...</p>");
             this.loadPage(`${url}`).then((markup) => {
@@ -185,6 +187,7 @@ class OS {
                 self.addMessage(markup);
                 let statusMessage = `<p>PAGE: ${url} - ${markup.length} BYTES LOADED</p>`;
                 self.setStatusBar(statusMessage);
+                //window.history.pushState("","",this.baseHref + '/' + url);
                 self.parseLinks();
             })
                 .catch((error) => {
@@ -214,10 +217,16 @@ class OS {
         document.head.appendChild(this.program);
 
         this.program.addEventListener('load', () => {
-            self.addMessage("<p>Program loaded</p>");
-            //self.goto(`programs/${file}/${file}.html`);
-            this.main();
+            self.addMessage(`<p>Program '${file}' loaded</p>`);
         });
+
+        this.program.addEventListener('error', () => {
+            self.addMessage(`<p>The program could not be loaded.</p><p>Please ensure the program exists in the programs directory. See 'HELP' for more information</p>`);
+        })
+    }
+
+    run() {
+        this.main();
     }
 
     /**
@@ -268,7 +277,7 @@ class OS {
 
         for (let i = 0; i < links.length; i++) {
             console.log(links[i]);
-            links[i].innerHTML += ` [${i + 1}]`;
+            links[i].innerHTML += `&nbsp;[${i + 1}]`;
             links[i].dataset.index = i + 1;
         }
 
@@ -383,6 +392,20 @@ class OS {
                     break;
             }
         })
+    }
+
+    startPage() {
+
+        // Get the path and dump the dev base
+        let path = window.location.pathname.replace(this.baseHref, '');
+
+        path.replace(/^\/+/g, '');
+
+        if (path = '') {
+            path = 'pages/home.html';
+        }
+
+        this.goto(path);
     }
 
     timer(seconds = 0, callback = () => {}) {
