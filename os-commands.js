@@ -32,8 +32,9 @@ class OsCommands extends OS {
         }
     }
 
-    list() {
-        this.goto('list');
+    list(target = '') {
+        console.log(target);
+        this.goto('api/list/directory/' + target);
     }
 
     home() {

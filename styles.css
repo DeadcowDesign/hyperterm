@@ -35,7 +35,7 @@
     padding: 0;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    cursor: not-allowed;
+    text-transform: uppercase;
     
 }
 
@@ -68,7 +68,8 @@ body {
     color: var(--phosphor);
     border-color: var(--phosphor);
     font-family: 'VT323', monospace;
-    caret-color: transparent;
+    /*caret-color: transparent;*/
+    caret: var(--phosphor) block;
 }
 
 body > *.invert {
@@ -152,9 +153,14 @@ li:before {
 hr {
     border: none;
     padding: 0;
-    margin: 0;
+    margin: 1em 0;
     border-top: var(--border);
 }
+
+a:focus {
+    outline: var(--border);
+}
+
 table {
     margin-top: 24px;
     border-collapse: collapse;
@@ -219,14 +225,24 @@ header {
 
 .output-wrapper {
     position: relative;
-    overflow: hidden;
+    overflow-y: scroll;
 }
 
+.output-wrapper::-webkit-scrollbar {
+    width: 1em;
+  }
+   
+  .output-wrapper::-webkit-scrollbar-track {
+    border: var(--border);
+  }
+   
+  .output-wrapper::-webkit-scrollbar-thumb {
+    background-color: var(--phosphor);
+  }
+
 .output {
-    position: absolute;
     min-height: 100%;
-    min-width: 100%;
-    bottom: 0;
+    min-width: calc(100% - 1em);
 }
 
 .input {
@@ -234,7 +250,7 @@ header {
     border-top: var(--border);
     min-height: var(--double-size);
     align-items: center;
-    grid-template-columns: auto auto auto 1fr;
+    grid-template-columns: auto 1fr;
 }
  input p {
      display: block;
@@ -248,21 +264,14 @@ header {
     outline: none;
     text-transform: uppercase;
     margin-left: 12px;
+    font-family: 'VT323', monospace;
+    background-color: transparent;
+    width: calc(100% - 12px);
+    border: var(--border);
+    border-style: dashed;
 }
 
-.caret {
-    display: block;
-    width: var(--half-size);
-    height: var(--font-size);
-    background-color: var(--phosphor);
-    animation: 1s blink step-end infinite;
-  }
-  
-  @keyframes blink {
-    from, to {
-        background-color: transparent;
-    }
-    50% {
-        background-color: var(--phosphor);
-    }
-  }
+.input-bar:focus {
+    border: var(--border);
+    padding-left: 4px;
+}

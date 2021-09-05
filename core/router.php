@@ -73,6 +73,8 @@ class Router
 
         $path = self::checkRoutesTable($path);
 
+        $path = explode('?', $path)[0];
+        
         $path_parts = explode('/', $path);
 
         $route_data = new \stdClass();
@@ -80,7 +82,6 @@ class Router
         $route_data->controller = $this->dehyphenate(array_shift($path_parts));
         $route_data->action     = $this->dehyphenate(array_shift($path_parts));
         $route_data->data       = $path_parts;
-
         return $route_data;
     }
 

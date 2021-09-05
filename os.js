@@ -28,7 +28,6 @@ class OS {
         document.addEventListener("DOMContentLoaded", () => {
             self.buildInterface();
             self.input.focus();
-            self.detectFocus();
             self.startInputListener();
             self.goto('pages/home.html');
         });
@@ -46,9 +45,9 @@ class OS {
         let h1 = document.createElement('h1');
         h1.innerHTML = '<h1><i>H</i>yper<i>T</i>er<i>M</i>ina<i>L</i> - (HTML)</h1>';
         header.appendChild(h1);
-        let pageData = document.createElement('p');
-        pageData.innerHTML = '<p>Page: <span id="pageName"></span></p>';
-        header.appendChild(pageData);
+        //let pageData = document.createElement('p');
+        //pageData.innerHTML = '<p>Page: <span id="pageName"></span></p>';
+        //header.appendChild(pageData);
         let byteData = document.createElement('p');
         byteData.innerHTML = '<p>Loaded <span id="bytes"></span> bytes</p>';
         header.appendChild(byteData);
@@ -71,16 +70,11 @@ class OS {
         let barText = document.createElement('p');
         barText.innerText = "Enter command: ";
         inputWrapper.appendChild(barText);
-        this.input = document.createElement('p');
+        this.input = document.createElement('input');
         this.input.classList.add('input-bar');
         this.input.setAttribute('id', "input-bar");
-        this.input.setAttribute("contenteditable", "true");
         this.input.setAttribute('tabindex', '0');
         inputWrapper.appendChild(this.input);
-        this.caret = document.createElement("div");
-        this.caret.classList.add("caret");
-        this.caret.setAttribute('id', 'caret');
-        inputWrapper.appendChild(this.caret);
         this.terminal.appendChild(inputWrapper);
 
         return true;
@@ -92,40 +86,6 @@ class OS {
     clear() {
         this.output.innerHTML = "";
         this.output.style.bottom = '0px';
-    }
-
-    /**
-     * disableMouseAndKeys - prevents the user from clicking any elements
-     * and returns focus to the input bar if the user attempts to use their
-     * mouse on the page.
-     * 
-     * Also disables default behaviour for the enter key to enable single line
-     * input for the input bar.
-     * 
-     * Attempts to detect focus for the input bar. Unfortunately, you can't actually properly
-     * detect whether an element is focussed or not when the user tabs out of the page.
-     * Which is, frankly, utterly insane.
-     */
-    detectFocus() {
-        document.addEventListener('keyup', (e) => {
-            if (e.target.nodeName !== 'P') {
-                self.addMessage(e.target.nodeName);
-            }
-        })
-
-        const self = this;
-        this.input.addEventListener('focusout', () => {
-            this.caret.style.display = 'none';
-            focuslost = true;
-            self.input.focus();
-        })
-
-        this.input.addEventListener('focus', (e) => {
-            if (e.target.nodeName == 'P') {
-                this.caret.style.display = 'block';
-                focuslost = false;
-            }
-        })
     }
 
     /**
@@ -209,34 +169,7 @@ class OS {
     loadPage(page = '') {
 
         this.addMessage('<p>' + page + '</p>');
-        let httpRequest = new XMLHttpRequest();
 
-        return new Promise((resolve, reject) => {
-
-            httpRequest.onreadystatechange = () => {
-
-                if (httpRequest.readyState === XMLHttpRequest.DONE) {
-
-                    if (httpRequest.status === 200) {
-
-                        resolve(httpRequest.responseText);
-
-                    } else if (httpRequest.status === 404) {
-
-                        reject({ status: httpRequest.status, message: "The requested page could not be found." });
-
-                    } else {
-
-                        reject({ status: httpRequest.status, message: "There was a problem loading the page. Please refresh the page or try again later" });
-                    }
-                }
-            }
-
-            let cachebuster = Math.round(new Date().getTime() / 1000);
-            httpRequest.open('GET', page + '?cb=' + cachebuster);
-
-            httpRequest.send();
-        });
     }
 
     /**
@@ -248,7 +181,10 @@ class OS {
         let links = this.output.querySelectorAll('a');
 
         for (let i = 0; i < links.length; i++) {
-            console.log(links[i]);
+            links[i].addEventListener('click', (e) => {
+                e.preventDefault();
+                this.goto(links[i].getAttribute('href'));
+            })
             links[i].innerHTML += ` [${i + 1}]`;
             links[i].dataset.index = i + 1;
         }
@@ -330,27 +266,22 @@ class OS {
             switch (event.key) {
                 case 'Enter':
                     event.preventDefault();
-                    this.processCommand(this.input.innerText);
-                    this.input.innerText = '';
+                    this.processCommand(this.input.value);
+                    this.input.value = '';
                     break;
 
                 case 'Escape':
                     event.preventDefault();
-                    this.input.innerText = '';
+                    this.input.value = '';
                     break;
-
-                case 'ArrowLeft':
-                case 'ArrowRight':
-                    event.preventDefault();
-                    break;
-                case 'ArrowUp':
+                /*case 'ArrowUp':
                     event.preventDefault();
                     this.scroll(24, true);
                     break;
                 case 'ArrowDown':
                     event.preventDefault();
                     this.scroll(24);
-                    break;
+                    break;*/
             }
         })
     }
@@ -384,7 +315,7 @@ class OS {
      * @param {string} url Name of page
      */
     updatePage(url = '') {
-        document.getElementById('pageName').innerText = url;
+        //document.getElementById('pageName').innerText = url;
 
     }
 }
