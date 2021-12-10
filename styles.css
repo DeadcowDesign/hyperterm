@@ -14,6 +14,18 @@
     --phosphor: rgb(var(--green-2));
     --glow: rgba(var(--green-2), 0.5);
 
+    /* FOR WHEN CUSTOM CURSORS ARE PROPERLY SUPPORTED
+    --cursor-white: url('cursor-white.png');
+    --cursor-amber: url('cursor-amber.png');
+    --cursor-lt-amber: url('cursor-lt-amber.png');
+    --cursor-green-1: url('cursor-green-1.png');
+    --cursor-green-2: url('cursor-green-2.png'), auto;
+    --cursor-green-3: url('cursor-green-3.png');
+    --cursor-apple-ii: url('cursor-apple-ii.png');
+    --cursor-apple-iic: url('cursor-apple-iic.png');
+
+    --cursor-image: var(--cursor-green-2);*/
+
     --font-size: 24px;
     --smaller: calc(var(--font-size)/1.25);
     --quarter-size: calc(var(--font-size)/4);
@@ -84,6 +96,7 @@ pre {
 body.amber {
     --phosphor: rgb(var(--amber));
     --glow: rgba(var(--amber), 0.5);
+    --cursor: var(--cursor-amber);
     
 }
 

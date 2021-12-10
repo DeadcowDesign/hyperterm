@@ -34,7 +34,7 @@ class OS {
         // Build the header
         let header = document.createElement('header');
         let h1 = document.createElement('h1');
-        h1.innerHTML = '<h1><i>H</i>yper<i>T</i>er<i>M</i>ina<i>L</i> - (HTML)</h1>';
+        h1.innerHTML = '<h1><u>H</u>yper<u>T</u>er<u>M</u>ina<u>L</u> - (HTML)</h1>';
         header.appendChild(h1);
         let pageData = document.createElement('p');
         pageData.innerHTML = '<p>Page: <span id="pageName"></span></p>';
@@ -112,6 +112,23 @@ class OS {
         })
     }
 
+    /**
+     * override links so that they don't actually link anymore.
+     */
+    processLinks() {
+
+        let links = document.querySelectorAll('a');
+        let linkCount = 1;
+        links.forEach(link => {
+            link.dataset.index = linkCount;
+            link.innerText += ' [' + linkCount + ']';
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                let linkTarget = e.target.getAttribute('href');
+                this.goto(linkTarget);
+            })
+        })
+    }
     /**
      * scroll - allow the user to scroll the output window with their cursor
      * keys. Probably wouldn't have been a feature of original green-screen
@@ -257,13 +274,25 @@ class OS {
     }
 
     goto(url) {
+        // Here we're dealing with the 'GOTO 1' scenario. If a link has an index
+        // target that matches our URL, we assume its an index, rather than a link
+        // text that's been entered (so, GOTO 1 as opposed to GOTO /PAGES/FOO)
+        let potentialTarget = document.querySelector(`[data-index="${url}"]`)
+        if (potentialTarget) {
+            let urlFragment = potentialTarget.getAttribute('href');
+            url = `pages/${urlFragment}.html`
+        } else {
+            url = `pages/${url}.html`;
+        }
+
         const self = this;
-        this.addMessage("<p>Loading /" + url + " Please wait...</p>");
-        this.loadPage(`pages/${url}.html`).then((markup) => {
+        this.addMessage("<p>Loading " + url + " Please wait...</p>");
+        this.loadPage(url).then((markup) => {
             self.clear();
             self.addMessage(markup);
             self.updateBytes(markup.length);
             self.updatePage(url);
+            self.processLinks();
         })
             .catch((error) => {
                 self.doError(error.status, error.message);

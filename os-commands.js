@@ -24,11 +24,11 @@ class OsCommands extends OS {
     }
 
     help(detail) {
-        const helpdir = 'pages/help/'
+        const helpdir = '/help/'
         if (detail == "") {
-            this.goto(helpdir + 'help.html');
+            this.goto(helpdir + 'help');
         } else {
-            this.goto(`${helpdir}${detail}.html`);
+            this.goto(`${helpdir}${detail}`);
         }
     }
 
@@ -38,7 +38,7 @@ class OsCommands extends OS {
     }
 
     home() {
-        this.goto('pages/home.html');
+        this.goto('home');
     }
 
     hello() {
