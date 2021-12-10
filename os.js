@@ -1,28 +1,17 @@
 class OS {
 
     constructor() {
-        this.output         = '',
-        this.input          = '',
-        this.caret          = '',
-        this.terminal       = '',
-        this.command        = '',
-        this.awaitingInput  = '',
-        this.program        = '',
-        this.statusMessage  = '',
-        this.commandPrompt  = '',
-        this.data           = '';
+        this.output = '',
+        this.input = '',
+        this.terminal = '',
+        this.command = '',
+        this.awaitingInput = '',
+        this.program = '',
+        this.data = '';
 
+        this.boot();
     }
 
-    /**
-     * addMessage - add a message to the terminal. Valid HTML should be passed
-     * to this function. Note that this will not clear the terminal and any
-     * message will be added to the bottom of the stack. Call the clear function
-     * first if the terminal window should be wiped before adding the message
-     */
-    addMessage(markup) {
-        this.output.insertAdjacentHTML('beforeend', markup);
-    }
 
     boot() {
         const self = this;
@@ -30,15 +19,12 @@ class OS {
             self.buildInterface();
             self.input.focus();
             self.startInputListener();
-            self.goto('pages/home.html');
+            self.goto('home');
         });
     }
 
-    setCommandPrompt() {
-        
-    }
-
     buildInterface() {
+        console.log('Building output');
         // Build the terminal container
         this.terminal = document.createElement('div');
         this.terminal.classList.add('terminal', 'screen');
@@ -50,9 +36,9 @@ class OS {
         let h1 = document.createElement('h1');
         h1.innerHTML = '<h1><i>H</i>yper<i>T</i>er<i>M</i>ina<i>L</i> - (HTML)</h1>';
         header.appendChild(h1);
-        //let pageData = document.createElement('p');
-        //pageData.innerHTML = '<p>Page: <span id="pageName"></span></p>';
-        //header.appendChild(pageData);
+        let pageData = document.createElement('p');
+        pageData.innerHTML = '<p>Page: <span id="pageName"></span></p>';
+        header.appendChild(pageData);
         let byteData = document.createElement('p');
         byteData.innerHTML = '<p>Loaded <span id="bytes"></span> bytes</p>';
         header.appendChild(byteData);
@@ -75,126 +61,84 @@ class OS {
         let barText = document.createElement('p');
         barText.innerText = "Enter command: ";
         inputWrapper.appendChild(barText);
-        this.input = document.createElement('input');
+        this.input = document.createElement('p');
         this.input.classList.add('input-bar');
         this.input.setAttribute('id', "input-bar");
-        this.input.setAttribute('tabindex', '0');
+        this.input.setAttribute("contenteditable", "true");
         inputWrapper.appendChild(this.input);
+        let caret = document.createElement("div");
+        caret.classList.add("caret");
+        inputWrapper.appendChild(caret);
         this.terminal.appendChild(inputWrapper);
 
         return true;
     }
 
     /**
-     * clear - clear the terminal window
+     * startInputListener - listen for keyboard events from this method. Any
+     * special keys should be added in here. Note that we disable Enter, Esc, 
+     * and the left and right arrows to prevent issues with the OS.
      */
-    clear() {
-        this.output.innerHTML = "";
-        this.output.style.bottom = '0px';
-    }
+    startInputListener() {
+        const self = this;
 
-    /**
-     * doError - output an OS error to the screen.
-     * 
-     * @param {int} code The error code
-     * @param {String} message The error message
-     */
-    doError(code = 0, message = '') {
-        this.addMessage(`<p>The OS could not process your request because of an error.</p>`);
-        let errorMessage = '<p>';
-        if (code) {
-            errorMessage += `Code: ${code} `;
-        }
+        this.input.addEventListener("keydown", (event) => {
 
-        errorMessage += `Message: `;
+            switch (event.key) {
+                case 'Enter':
+                    event.preventDefault();
+                    this.processCommand(this.input.innerText);
+                    this.input.innerText = '';
+                    break;
 
-        if (message) {
-            errorMessage += message;
-        } else {
-            errorMessage += "Unidentified Error";
-        }
-
-        errorMessage += '</p>';
-
-        this.addMessage(errorMessage);
-    }
-
-    /**
-     * goto - goto a page on the website or a link
-     * @param {utl} url the requested URL
-     */
-    goto(url) {
-
-        if (url.match(/^[0-9]{1,}$/)) {
-            let targetLink = document.querySelector(`[data-index="${url}"]`);
-
-            if (!targetLink) {
-
-                this.doError(0, "Unrecognised link ID");
-                return false;
+                case 'Escape':
+                    event.preventDefault();
+                    this.input.innerText = '';
+                    break;
+                
+                /*case 'ArrowLeft':
+                case 'ArrowRight':
+                    event.preventDefault();
+                    break;
+                case 'ArrowUp':
+                    event.preventDefault();
+                    this.scroll(24, true);
+                    break;
+                case 'ArrowDown':
+                    event.preventDefault();
+                    this.scroll(24);
+                    break;*/
             }
-
-            url = targetLink.getAttribute("href");
-        }
-
-        // Open external site
-        if (url.match(/^http(s)?:/)) {
-
-            this.addMessage('<p>Opening link in new window in 5 seconds<p>');
-            this.timer(5, () => window.open(url));
-
-
-        } else {
-
-            // Open internal page
-            const self = this;
-            this.addMessage("<p>Loading /" + url + " Please wait...</p>");
-            this.loadPage(`${url}`).then((markup) => {
-                self.clear();
-                self.addMessage(markup);
-                self.updateBytes(markup.length);
-                self.updatePage(url);
-                self.parseLinks();
-            })
-                .catch((error) => {
-                    self.doError(error.status, error.message);
-
-                    return false;
-                });
-        }
-
-        return true;
+        })
     }
 
     /**
-     * loadPage ajax out to a specified resource and return it.
+     * scroll - allow the user to scroll the output window with their cursor
+     * keys. Probably wouldn't have been a feature of original green-screen
+     * terminals, but we have to make some allowances for modernity and
+     * practicality.
      * 
-     * @return {promise} A JavaScript promis object
+     * @param {int} amount The amount in pixels each keypress should scroll by
+     * @param {string} up Set true to scroll up, else down.
      */
-    loadPage(page = '') {
+    scroll(amount, up = false) {
+        let bottom = parseInt(this.output.style.bottom);
 
-        this.addMessage('<p>' + page + '</p>');
-
-    }
-
-    /**
-     * parseLinks - loop through the page links and add a link
-     * identifier to them so they can be access via the command
-     * @returns boolean on success
-     */
-    parseLinks() {
-        let links = this.output.querySelectorAll('a');
-
-        for (let i = 0; i < links.length; i++) {
-            links[i].addEventListener('click', (e) => {
-                e.preventDefault();
-                this.goto(links[i].getAttribute('href'));
-            })
-            links[i].innerHTML += ` [${i + 1}]`;
-            links[i].dataset.index = i + 1;
+        if (up) {
+                this.output.style.bottom = (bottom - amount) + 'px';
+        } else {
+            this.output.style.bottom = (bottom + amount) + 'px';
         }
-
-        return true;
+    }
+    /**
+     * addMessage - add a message to the terminal. Valid HTML should be passed
+     * to this function. Note that this will not clear the terminal and any
+     * message will be added to the bottom of the stack. Call the clear function
+     * first if the terminal window should be wiped before adding the message
+     */
+    addMessage(markup) {
+        console.log(this.output);
+        this.output.insertAdjacentHTML('beforeend', markup);
     }
 
     /**
@@ -233,78 +177,40 @@ class OS {
     }
 
     /**
-     * reset - reset the terminal (reload the page)
-     */
-    reset() {
-        location.reload();
-    }
-
-    /**
-     * scroll - allow the user to scroll the output window with their cursor
-     * keys. Probably wouldn't have been a feature of original green-screen
-     * terminals, but we have to make some allowances for modernity and
-     * practicality.
+     * loadPage ajax out to a specified resource and return it.
      * 
-     * @param {int} amount The amount in pixels each keypress should scroll by
-     * @param {string} up Set true to scroll up, else down.
+     * @return {promise} A JavaScript promis object
      */
-    scroll(amount, up = false) {
-        let bottom = parseInt(this.output.style.bottom);
+    loadPage(page = '') {
 
-        if (up) {
-            this.output.style.bottom = (bottom - amount) + 'px';
-        } else {
-            this.output.style.bottom = (bottom + amount) + 'px';
-        }
-    }
+        let httpRequest = new XMLHttpRequest();
 
-    /**
-     * startInputListener - listen for keyboard events from this method. Any
-     * special keys should be added in here. Note that we disable Enter, Esc, 
-     * and the left and right arrows to prevent issues with the OS.
-     */
-    startInputListener() {
-        const self = this;
+        return new Promise((resolve, reject) => {
 
-        this.input.addEventListener("keydown", (event) => {
+            httpRequest.onreadystatechange = () => {
 
-            switch (event.key) {
-                case 'Enter':
-                    event.preventDefault();
-                    this.processCommand(this.input.value);
-                    this.input.value = '';
-                    break;
+                if (httpRequest.readyState === XMLHttpRequest.DONE) {
 
-                case 'Escape':
-                    event.preventDefault();
-                    this.input.value = '';
-                    break;
-                /*case 'ArrowUp':
-                    event.preventDefault();
-                    this.scroll(24, true);
-                    break;
-                case 'ArrowDown':
-                    event.preventDefault();
-                    this.scroll(24);
-                    break;*/
+                    if (httpRequest.status === 200) {
+
+                        resolve(httpRequest.responseText);
+
+                    } else if (httpRequest.status === 404) {
+
+                        reject({ status: httpRequest.status, message: "The requested page could not be found." });
+
+                    } else {
+
+                        reject({ status: httpRequest.status, message: "There was a problem loading the page. Please refresh the page or try again later" });
+                    }
+                }
             }
-        })
-    }
 
-    timer(seconds = 0, callback = () => {}) {
+            let cachebuster = Math.round(new Date().getTime() / 1000);
+            httpRequest.open('GET', page + '?cb=' + cachebuster);
 
-        let secs = seconds - 1;
-        const self = this;
-
-        let timer = window.setInterval(() => {
-            if (secs > 0) {
-                this.addMessage(`<p>${secs} Seconds...</p>`);
-                secs--;
-            } else {
-                callback();
-                window.clearInterval(timer);
-            }
-        }, (1000));
+            httpRequest.send();
+        });
     }
 
     /**
@@ -320,19 +226,56 @@ class OS {
      * @param {string} url Name of page
      */
     updatePage(url = '') {
-        //document.getElementById('pageName').innerText = url;
+        document.getElementById('pageName').innerText = '/' + url;
 
     }
 
-    load(file) {
-        const self = this;
-        let program = document.createElement("script");
-        program.setAttribute("src", `programs/${file}/${file}.js`);
-        document.head.appendChild(program);
+    /**
+     * doError - output an OS error to the screen.
+     * 
+     * @param {int} code The error code
+     * @param {String} message The error message
+     */
+    doError(code = 0, message = '') {
+        this.addMessage(`<p>The OS could not process your request because of an error.</p>`);
+        let errorMessage = '<p>';
+        if (code) {
+            errorMessage += `Code: ${code} `; 
+        }
+        
+        errorMessage += `Message: `;
 
-        program.addEventListener('load', () => {
-            self.addMessage("<p>Program loaded</p>");
-            self.goto(`programs/${file}/${file}.html`);
-        });
+        if (message) {
+            errorMessage += message;
+        } else {
+            errorMessage += "Unidentified Error";
+        }
+
+        errorMessage += '</p>';
+
+        this.addMessage(errorMessage);
+    }
+
+    goto(url) {
+        const self = this;
+        this.addMessage("<p>Loading /" + url + " Please wait...</p>");
+        this.loadPage(`pages/${url}.html`).then((markup) => {
+            self.clear();
+            self.addMessage(markup);
+            self.updateBytes(markup.length);
+            self.updatePage(url);
+        })
+            .catch((error) => {
+                self.doError(error.status, error.message);
+            });
+    }
+
+    reset() {
+        location.reload();
+    }
+
+    clear() {
+        this.output.innerHTML = "";
+        this.output.style.bottom = '0px';
     }
 }

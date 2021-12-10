@@ -94,4 +94,3 @@ class OsCommands extends OS {
 }
 
 var OSObj = new OsCommands();
-OSObj.boot();
