@@ -9,7 +9,7 @@
     --green-3: 0, 255, 102;
     --blue: 0,70,255;
     --red: 255,95,0;
-    --glass: 40,40,40;
+    --glass: 73,82,71;
     --background: rgb(var(--glass));
     --phosphor: rgb(var(--green-2));
     --glow: rgba(var(--green-2), 0.5);
@@ -55,12 +55,12 @@
     font-size: var(--smaller);
 }
 
-p.no-space:first-of-type {
+pre.no-space:first-of-type {
     padding-top: var(--half-size);
 }
 
-p.no-space {
-    line-height: 0.75;
+pre.no-space {
+    line-height: 1;
 }
 
 h1 {
@@ -82,6 +82,8 @@ body {
     font-family: 'VT323', monospace;
     /*caret-color: transparent;*/
     caret: var(--phosphor) block;
+    background: rgb(109,122,106);
+    background: radial-gradient(farthest-corner at 40px 40px, rgba(73,82,71,1) 0%, rgba(3,4,2,1) 100%);
 }
 
 body > *.invert {
@@ -172,6 +174,13 @@ hr {
 
 a:focus {
     outline: var(--border);
+    background-color: var(--phosphor);
+    color: var(--background);
+}
+
+a:hover {
+    background-color: var(--phosphor);
+    color: var(--background);
 }
 
 table {
@@ -247,6 +256,8 @@ header {
    
   .output-wrapper::-webkit-scrollbar-track {
     border: var(--border);
+    border-top: none;
+    border-bottom: none;;
   }
    
   .output-wrapper::-webkit-scrollbar-thumb {
@@ -256,6 +267,7 @@ header {
 .output {
     min-height: 100%;
     min-width: calc(100% - 1em);
+    margin-right: var(--half-size);
 }
 
 .input {
@@ -287,4 +299,21 @@ header {
 .input-bar:focus {
     border: var(--border);
     padding-left: 4px;
+}
+
+/* Allows for vertical columns */
+.columns {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    width: 100%;
+}
+
+.column {
+    border: var(--border);
+    border-right: none;
+    padding: var(--half-size);
+}
+
+.column:last-child {
+    border-right: var(--border);
 }
