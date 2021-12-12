@@ -73,7 +73,7 @@ body {
     cursor: var(--cursor-image), auto;
     width: 100vw;
     height: 100vh;
-    padding: 0 var(--half-size);
+    
     margin: 0;
     background-color: var(--background);
     color: var(--phosphor);
@@ -159,7 +159,7 @@ p {
 
 h1 {
     font-size: var(--double-size);
-    line-height: 2;
+    margin-bottom: var(--standard-size);
 }
 
 h2 {
@@ -252,6 +252,7 @@ tfoot td:empty {
     max-height: 100vh;
     display: grid;
     grid-template-rows: auto 1fr auto;
+    padding: 0 var(--half-size);
 }
 
 header {
@@ -264,8 +265,12 @@ header {
 
 header h1 {
     font-size: var(--standard-size);
+    margin: 0;
 }
 
+header p {
+    margin:0;
+}
 .output-wrapper {
     position: relative;
     overflow-y: scroll;
@@ -298,8 +303,10 @@ header h1 {
     align-items: center;
     grid-template-columns: auto 1fr;
 }
- input p {
+
+.input p {
      display: block;
+     margin: 0;
  }
 
 .input-bar {
