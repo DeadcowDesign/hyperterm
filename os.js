@@ -8,7 +8,7 @@ class OS {
         this.awaitingInput = '',
         this.program = '',
         this.data = '';
-
+        this.inputWrapper = '';
         this.boot();
     }
 
@@ -21,6 +21,17 @@ class OS {
             self.startInputListener();
             self.goto('home');
         });
+
+        window.onpopstate = function(e){
+            console.log(e.state);
+            if(e.state){
+                if (e.state.hasOwnProperty('target')) {
+                    self.goto(e.state.target);
+                }
+                //document.getElementById("content").innerHTML = e.state.html;
+                //document.title = e.state.pageTitle;
+            }
+        };
     }
 
     buildInterface() {
@@ -34,13 +45,13 @@ class OS {
         // Build the header
         let header = document.createElement('header');
         let h1 = document.createElement('h1');
-        h1.innerHTML = '<h1><u>H</u>yper<u>T</u>er<u>M</u>ina<u>L</u> - (HTML)</h1>';
+        h1.innerHTML = '<h1>HyperTerMinaL - (HTML)</h1>';
         header.appendChild(h1);
         let pageData = document.createElement('p');
         pageData.innerHTML = '<p>Page: <span id="pageName"></span></p>';
         header.appendChild(pageData);
         let byteData = document.createElement('p');
-        byteData.innerHTML = '<p>Loaded <span id="bytes"></span> bytes</p>';
+        byteData.innerHTML = '<p>Loaded: <span id="bytes"></span> bytes</p>';
         header.appendChild(byteData);
         this.terminal.appendChild(header);
 
@@ -48,7 +59,7 @@ class OS {
         let outputWrapper = document.createElement('div');
         outputWrapper.classList.add('output-wrapper');
         this.terminal.appendChild(outputWrapper);
-        this.output = document.createElement('div');
+        this.output = document.createElement('section');
         this.output.classList.add('output');
         this.output.setAttribute('id', 'output');
         this.output.style.bottom = '0px';
@@ -56,20 +67,20 @@ class OS {
         this.terminal.appendChild(outputWrapper);
 
         // Build the input
-        let inputWrapper = document.createElement('div');
-        inputWrapper.classList.add("input");
+        this.inputWrapper = document.createElement('form');
+        this.inputWrapper.classList.add("input");
+        this.inputWrapper.setAttribute('autocomplete', 'off');
         let barText = document.createElement('p');
         barText.innerText = "Enter command: ";
-        inputWrapper.appendChild(barText);
-        this.input = document.createElement('p');
+        this.inputWrapper.appendChild(barText);
+        this.input = document.createElement('input');
         this.input.classList.add('input-bar');
         this.input.setAttribute('id', "input-bar");
-        this.input.setAttribute("contenteditable", "true");
-        inputWrapper.appendChild(this.input);
+        this.inputWrapper.appendChild(this.input);
         let caret = document.createElement("div");
-        caret.classList.add("caret");
-        inputWrapper.appendChild(caret);
-        this.terminal.appendChild(inputWrapper);
+        /*caret.classList.add("caret");
+        inputWrapper.appendChild(caret);*/
+        this.terminal.appendChild(this.inputWrapper);
 
         return true;
     }
@@ -82,33 +93,11 @@ class OS {
     startInputListener() {
         const self = this;
 
-        this.input.addEventListener("keydown", (event) => {
-
-            switch (event.key) {
-                case 'Enter':
-                    event.preventDefault();
-                    this.processCommand(this.input.innerText);
-                    this.input.innerText = '';
-                    break;
-
-                case 'Escape':
-                    event.preventDefault();
-                    this.input.innerText = '';
-                    break;
-                
-                /*case 'ArrowLeft':
-                case 'ArrowRight':
-                    event.preventDefault();
-                    break;
-                case 'ArrowUp':
-                    event.preventDefault();
-                    this.scroll(24, true);
-                    break;
-                case 'ArrowDown':
-                    event.preventDefault();
-                    this.scroll(24);
-                    break;*/
-            }
+        this.inputWrapper.addEventListener("submit", (event) => {
+            event.preventDefault();
+            this.processCommand(this.input.value);
+            this.input.value = '';
+ 
         })
     }
 
@@ -122,6 +111,7 @@ class OS {
         links.forEach(link => {
             link.dataset.index = linkCount;
             link.innerText += ' [' + linkCount + ']';
+            linkCount++;
             link.addEventListener('click', (e) => {
                 e.preventDefault();
                 let linkTarget = e.target.getAttribute('href');
@@ -154,7 +144,6 @@ class OS {
      * first if the terminal window should be wiped before adding the message
      */
     addMessage(markup) {
-        console.log(this.output);
         this.output.insertAdjacentHTML('beforeend', markup);
     }
 
@@ -198,7 +187,7 @@ class OS {
      * 
      * @return {promise} A JavaScript promis object
      */
-    loadPage(page = '') {
+    loadPage(page = '', rawurl) {
 
         let httpRequest = new XMLHttpRequest();
 
@@ -211,6 +200,7 @@ class OS {
                     if (httpRequest.status === 200) {
 
                         resolve(httpRequest.responseText);
+                        history.pushState({target: rawurl},'','');
 
                     } else if (httpRequest.status === 404) {
 
@@ -274,6 +264,7 @@ class OS {
     }
 
     goto(url) {
+        const rawurl = url;
         // Here we're dealing with the 'GOTO 1' scenario. If a link has an index
         // target that matches our URL, we assume its an index, rather than a link
         // text that's been entered (so, GOTO 1 as opposed to GOTO /PAGES/FOO)
@@ -287,7 +278,7 @@ class OS {
 
         const self = this;
         this.addMessage("<p>Loading " + url + " Please wait...</p>");
-        this.loadPage(url).then((markup) => {
+        this.loadPage(url, rawurl).then((markup) => {
             self.clear();
             self.addMessage(markup);
             self.updateBytes(markup.length);
