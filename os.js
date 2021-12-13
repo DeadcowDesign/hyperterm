@@ -9,6 +9,9 @@ class OS {
         this.program = '',
         this.data = '';
         this.inputWrapper = '';
+        this.basicInstructions = [];
+        this.basicVariables = [];
+        this.isBasic = false;
         this.boot();
     }
 
@@ -45,7 +48,8 @@ class OS {
         // Build the header
         let header = document.createElement('header');
         let h1 = document.createElement('h1');
-        h1.innerHTML = '<h1>HyperTerMinaL - (HTML)</h1>';
+        h1.setAttribute('id', 'programtitle');
+        h1.innerHTML = 'HyperTerMinaL - (HTML)';
         header.appendChild(h1);
         let pageData = document.createElement('p');
         pageData.innerHTML = '<p>Page: <span id="pageName"></span></p>';
@@ -155,12 +159,30 @@ class OS {
      * @param {string} input 
      */
     processCommand(input) {
+
         input = input.toLowerCase();
 
         let [command, ...data] = input.split(" ");
 
         this.command = command;
         this.data = data.join(" ");
+
+        if (this.isBasic) {
+            this.processBasic();
+            return;
+        }
+
+        if (this.command.match(/^\#/)) {
+
+            if (!this.isBasic) {
+                
+                this.isBasic = true;
+                this.updateTitle('BASIC Interpreter');
+            }
+
+            this.processBasic();
+            return;
+        }
 
         if (this.awaitingInput === '') {
             if (typeof this[this.command] !== 'function') {
@@ -229,6 +251,14 @@ class OS {
     }
 
     /**
+     * updateBytes - update the number of bytes loaded in the status bar
+     * @param {int} bytes Number of bytes loaded
+     */
+     updateTitle(title = '') {
+        document.getElementById('programtitle').innerText = title;
+    }
+
+    /**
      * updatePage - update the current page displayed in the status bar
      * @param {string} url Name of page
      */
@@ -290,12 +320,44 @@ class OS {
             });
     }
 
+    /**
+     * Just do Over
+     */
     reset() {
         location.reload();
     }
 
+    /**
+     * Empty the output terminal
+     */
     clear() {
         this.output.innerHTML = "";
         this.output.style.bottom = '0px';
+    }
+
+    /******************
+     * BASIC INTERPETER
+     ******************/
+    /**
+     * I wish there was a way to make this suck less, but there doesn't
+     * seem to be. The only way to do this is to hard-code it into
+     * the main class. Dynamic extension doesn't seem, as is so often the
+     * case with JavaScript, seem to work properly.
+     */
+    processBasic() {
+        const self = this;
+        // Firstly lets see if this is a line or a command...
+        // If our command starts with a hash, we assume its a basic line
+        // Get the line number and store it in the listing array.
+        if (this.command.match(/^\#/)) {
+            this.basicInstructions[this.command] = this.data;
+        }
+        this.clear();
+
+        Object.keys(this.basicInstructions).forEach((key) => {
+            this.addMessage(key + ' ' + this.basicInstructions[key] + '<br>');
+            console.log("WHAT THE FUCKING FUCK JAVASCRIPT");
+        })
+
     }
 }
