@@ -22,14 +22,14 @@ class OS {
             self.buildInterface();
             self.input.focus();
             self.startInputListener();
-            self.goto('home');
+            self.open('home');
         });
 
         window.onpopstate = function(e){
             console.log(e.state);
             if(e.state){
                 if (e.state.hasOwnProperty('target')) {
-                    self.goto(e.state.target);
+                    self.open(e.state.target);
                 }
                 //document.getElementById("content").innerHTML = e.state.html;
                 //document.title = e.state.pageTitle;
@@ -119,7 +119,7 @@ class OS {
             link.addEventListener('click', (e) => {
                 e.preventDefault();
                 let linkTarget = e.target.getAttribute('href');
-                this.goto(linkTarget);
+                this.open(linkTarget);
             })
         })
     }
@@ -166,23 +166,6 @@ class OS {
 
         this.command = command;
         this.data = data.join(" ");
-
-        if (this.isBasic) {
-            this.processBasic();
-            return;
-        }
-
-        if (this.command.match(/^\#/)) {
-
-            if (!this.isBasic) {
-                
-                this.isBasic = true;
-                this.updateTitle('BASIC Interpreter');
-            }
-
-            this.processBasic();
-            return;
-        }
 
         if (this.awaitingInput === '') {
             if (typeof this[this.command] !== 'function') {
@@ -293,15 +276,20 @@ class OS {
         this.addMessage(errorMessage);
     }
 
-    goto(url) {
+    open(url) {
         const rawurl = url;
-        // Here we're dealing with the 'GOTO 1' scenario. If a link has an index
+        // Here we're dealing with the 'OPEN 1' scenario. If a link has an index
         // target that matches our URL, we assume its an index, rather than a link
-        // text that's been entered (so, GOTO 1 as opposed to GOTO /PAGES/FOO)
-        let potentialTarget = document.querySelector(`[data-index="${url}"]`)
+        // text that's been entered (so, OPEN 1 as opposed to OPEN /PAGES/FOO)
+        let potentialTarget = document.querySelector(`[data-index="${url}"]`);
         if (potentialTarget) {
             let urlFragment = potentialTarget.getAttribute('href');
-            url = `pages/${urlFragment}.html`
+            if (urlFragment.match(/^https:\/\//)) {
+                window.open(urlFragment);
+                return;
+            } else {
+                url = `pages/${urlFragment}.html`
+            }
         } else {
             url = `pages/${url}.html`;
         }
@@ -335,29 +323,73 @@ class OS {
         this.output.style.bottom = '0px';
     }
 
-    /******************
-     * BASIC INTERPETER
-     ******************/
-    /**
-     * I wish there was a way to make this suck less, but there doesn't
-     * seem to be. The only way to do this is to hard-code it into
-     * the main class. Dynamic extension doesn't seem, as is so often the
-     * case with JavaScript, seem to work properly.
-     */
-    processBasic() {
-        const self = this;
-        // Firstly lets see if this is a line or a command...
-        // If our command starts with a hash, we assume its a basic line
-        // Get the line number and store it in the listing array.
-        if (this.command.match(/^\#/)) {
-            this.basicInstructions[this.command] = this.data;
+    help(detail) {
+        const helpdir = '/help/'
+        if (detail == "") {
+            this.open(helpdir + 'help');
+        } else {
+            this.open(`${helpdir}${detail}`);
         }
-        this.clear();
+    }
 
-        Object.keys(this.basicInstructions).forEach((key) => {
-            this.addMessage(key + ' ' + this.basicInstructions[key] + '<br>');
-            console.log("WHAT THE FUCKING FUCK JAVASCRIPT");
-        })
+    list(target = '') {
+        console.log(target);
+        this.open('api/list/directory/' + target);
+    }
+
+    home() {
+        this.open('home');
+    }
+
+    hello() {
+        this.addMessage('Hello, yourself.');
+    }
+
+    glow() {
+        document.body.classList.toggle('glow');
+
+        let message = '<p>Glow disabled</p>';
+
+        if (document.body.classList.contains('glow')) {
+            message = '<p>Glow enabled</p>';
+        }
+
+        this.addMessage(message);
+    }
+
+    scanlines() {
+        this.terminal.classList.toggle('screen');
+
+        let message = '<p>Scanlines disabled</p>';
+
+        if (this.terminal.classList.contains('screen')) {
+            message = '<p>Scanlines enabled</p>';
+        }
+
+        this.addMessage(message);
+    }
+
+    colour(requiredColour) {
+        let colours = ['red', 'blue', 'white', 'amber', 'lt-amber', 'green-1', 'green-2', 'green-3', 'apple-ii', 'apple-iic'];
+
+        if (!colours.includes(requiredColour)) {
+            this.doError(0, `Colour not recogised. type 'HELP COLOUR' for a list of available colours`);
+            return false;
+        }
+
+        for (const colour of colours) {
+
+            document.body.classList.remove(colour);
+        }
+
+        document.body.classList.add(requiredColour);
+        return true;
 
     }
+
+    print(string) {
+        string = '<p>' + string.toUpperCase() + '</p>';
+        this.addMessage(string);
+    }
+
 }

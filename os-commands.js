@@ -23,74 +23,7 @@ class OsCommands extends OS {
         }
     }
 
-    help(detail) {
-        const helpdir = '/help/'
-        if (detail == "") {
-            this.goto(helpdir + 'help');
-        } else {
-            this.goto(`${helpdir}${detail}`);
-        }
-    }
 
-    list(target = '') {
-        console.log(target);
-        this.goto('api/list/directory/' + target);
-    }
-
-    home() {
-        this.goto('home');
-    }
-
-    hello() {
-        this.addMessage('Hello, yourself.');
-    }
-
-    glow() {
-        document.body.classList.toggle('glow');
-
-        let message = '<p>Glow disabled</p>';
-
-        if (document.body.classList.contains('glow')) {
-            message = '<p>Glow enabled</p>';
-        }
-
-        this.addMessage(message);
-    }
-
-    scanlines() {
-        this.terminal.classList.toggle('screen');
-
-        let message = '<p>Scanlines disabled</p>';
-
-        if (this.terminal.classList.contains('screen')) {
-            message = '<p>Scanlines enabled</p>';
-        }
-
-        this.addMessage(message);
-    }
-
-    colour(requiredColour) {
-        let colours = ['red', 'blue', 'white', 'amber', 'lt-amber', 'green-1', 'green-2', 'green-3', 'apple-ii', 'apple-iic'];
-
-        if (!colours.includes(requiredColour)) {
-            this.doError(0, `Colour not recogised. type 'HELP COLOUR' for a list of available colours`);
-            return false;
-        }
-
-        for (const colour of colours) {
-
-            document.body.classList.remove(colour);
-        }
-
-        document.body.classList.add(requiredColour);
-        return true;
-
-    }
-
-    echo(string) {
-        string = '<p>' + string.toUpperCase() + '</p>';
-        this.addMessage(string);
-    }
 }
 
 var OSObj = new OsCommands();

@@ -6,6 +6,6 @@ OS.prototype.example = function() {
 
 OsCommands.prototype.help = function() {
     const self = this;
-    this.goto('programs/example/help.html');
+    this.open('programs/example/help.html');
     this.addMessage('<p>This is part of the example program');
 }
